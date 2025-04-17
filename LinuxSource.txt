@@ -628,7 +628,7 @@ function Linux.Create(config)
             end)
 
             Btn.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MousButton1 then
+                if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
                     TweenService:Create(BtnFrame, tweenInfo, {BackgroundColor3 = clickColor}):Play()
                 end
             end)
@@ -811,17 +811,17 @@ function Linux.Create(config)
             })
 
             local DropFrame = Linux.Instance("ScrollingFrame", {
-                Parent = Dropdown,
-                BackgroundColor3 = Color3.fromRGB(28, 28, 28),
+                Parent = ElementContainer,
+                BackgroundColor3 = Color3.fromRGB(17, 17, 17),
                 BorderColor3 = Color3.fromRGB(50, 50, 50),
                 BorderSizePixel = 2,
                 Size = UDim2.new(1, -5, 0, 0),
-                Position = UDim2.new(0, 0, 0, 34),
                 CanvasSize = UDim2.new(0, 0, 0, 0),
                 AutomaticCanvasSize = Enum.AutomaticSize.Y,
                 ScrollBarThickness = 0,
                 ClipsDescendants = true,
-                ZIndex = 3
+                ZIndex = 3,
+                LayoutOrder = elementOrder
             })
 
             Linux.Instance("UICorner", {
@@ -863,17 +863,8 @@ function Linux.Create(config)
                     TweenService:Create(DropFrame, tween, {Size = UDim2.new(1, -5, 0, 0)}):Play()
                     TweenService:Create(Arrow, tween, {Rotation = 0}):Play()
                 end
-
-                local totalHeight = 30
-                for _, child in pairs(ElementContainer:GetChildren()) do
-                    if child:IsA("Frame") or child:IsA("TextButton") then
-                        totalHeight = totalHeight + child.Size.Y.Offset + 4
-                        if child == Dropdown and IsOpen then
-                            totalHeight = totalHeight + finalHeight
-                        end
-                    end
-                end
-                TabContent.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
+                task.wait(0.2)
+                TabContent.CanvasSize = UDim2.new(0, 0, 0, ElementContainer.AbsoluteSize.Y + ElementContainer:GetChildren()[1].AbsoluteContentSize.Y)
             end
 
             local function PopulateOptions()
@@ -886,7 +877,7 @@ function Linux.Create(config)
                     for _, opt in pairs(Options) do
                         local OptBtn = Linux.Instance("TextButton", {
                             Parent = DropFrame,
-                            BackgroundColor3 = Color3.fromRGB(28, 28, 28),
+                            BackgroundColor3 = Color3.fromRGB(25, 25, 25),
                             BorderColor3 = Color3.fromRGB(50, 50, 50),
                             BorderSizePixel = 2,
                             Size = UDim2.new(1, -5, 0, 25),
@@ -913,8 +904,6 @@ function Linux.Create(config)
                                 end
                             end
                             spawn(function() Linux:SafeCallback(config.Callback, opt) end)
-                            IsOpen = false
-                            PopulateOptions()
                         end)
                     end
                 end
@@ -929,6 +918,9 @@ function Linux.Create(config)
                 if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
                     IsOpen = not IsOpen
                     PopulateOptions()
+                    if IsOpen then
+                        elementOrder = elementOrder + 1
+                    end
                 end
             end)
 
