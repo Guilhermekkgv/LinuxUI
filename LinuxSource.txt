@@ -337,7 +337,7 @@ function Linux.Create(config)
         Position = UDim2.new(0, 0, 0, 0),
         Size = UDim2.new(1, 0, 1, 0),
         CanvasSize = UDim2.new(0, 0, 0, 0),
-        AutomaticCanvasSize = Enum.AutomaticSize.Y,
+        AutomaticCanvasSize = Enum.Aut软Size.Y,
         ScrollBarThickness = 0,
         ZIndex = 2,
         BorderSizePixel = 0
@@ -692,7 +692,7 @@ function Linux.Create(config)
 
             local ToggleFill = Linux.Instance("Frame", {
                 Parent = ToggleBox,
-                BackgroundColor3 = Color3.fromRGB(0, 120, 255),
+                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                 Size = UDim2.new(0, 0, 1, 0),
                 ZIndex = 1,
                 BorderSizePixel = 0
@@ -703,6 +703,7 @@ function Linux.Create(config)
                 CornerRadius = UDim.new(1, 0)
             })
 
+            local ToggleGradient
             local Knob = Linux.Instance("Frame", {
                 Parent = ToggleBox,
                 BackgroundColor3 = Color3.fromRGB(255, 255, 255),
@@ -718,7 +719,6 @@ function Linux.Create(config)
             })
 
             local State = config.Default or false
-            local ToggleGradient
 
             local function UpdateToggle()
                 local tween = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
@@ -727,7 +727,7 @@ function Linux.Create(config)
                         ToggleGradient:Destroy()
                     end
                     ToggleGradient = Linux.Instance("UIGradient", {
-                        Parent = ToggleBox,
+                        Parent = ToggleFill,
                         Color = ColorSequence.new({
                             ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 120, 255)),
                             ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 139))
@@ -740,8 +740,7 @@ function Linux.Create(config)
                     if ToggleGradient then
                         ToggleGradient:Destroy()
                     end
-                    ToggleBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-                    TweenService:Create(ToggleFill, tween, {Size = UDim2.new(0, 0, 1, 0)}):Play()
+                    ToggleFill.Size = UDim2.new(0, 0, 1, 0)
                     TweenService:Create(Knob, tween, {Position = UDim2.new(0, 2, 0, 2)}):Play()
                 end
             end
@@ -864,11 +863,11 @@ function Linux.Create(config)
                     TweenService:Create(DropFrame, tween, {Size = UDim2.new(1, -5, 0, 0)}):Play()
                     TweenService:Create(Arrow, tween, {Rotation = 0}):Play()
                 end
-                task.wait(0.2)
+
                 local totalHeight = 30
                 for _, child in pairs(ElementContainer:GetChildren()) do
                     if child:IsA("Frame") or child:IsA("TextButton") then
-                        totalHeight = totalHeight + child.AbsoluteSize.Y + 4
+                        totalHeight = totalHeight + child.Size.Y.Offset + 4
                         if child == Dropdown and IsOpen then
                             totalHeight = totalHeight + finalHeight
                         end
