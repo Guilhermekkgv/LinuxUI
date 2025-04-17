@@ -6,6 +6,7 @@ function UILibrary:CreateWindow(title)
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
     ScreenGui.ResetOnSpawn = false
+    ScreenGui.IgnoreGuiInset = true
 
     local Frame = Instance.new("Frame")
     Frame.Size = UDim2.new(0, 500, 0, 350)
@@ -16,7 +17,7 @@ function UILibrary:CreateWindow(title)
 
     local TitleBar = Instance.new("Frame")
     TitleBar.Size = UDim2.new(1, 0, 0, 30)
-    TitleBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    TitleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     TitleBar.BorderSizePixel = 0
     TitleBar.Parent = Frame
 
@@ -31,22 +32,32 @@ function UILibrary:CreateWindow(title)
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
     TitleLabel.Parent = TitleBar
 
-    local Content = Instance.new("Frame")
-    Content.Size = UDim2.new(1, 0, 1, -30)
-    Content.Position = UDim2.new(0, 0, 0, 30)
-    Content.BackgroundTransparency = 1
-    Content.Parent = Frame
+    local TabContainer = Instance.new("Frame")
+    TabContainer.Size = UDim2.new(0, 120, 1, -30)
+    TabContainer.Position = UDim2.new(0, 0, 0, 30)
+    TabContainer.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    TabContainer.BorderSizePixel = 0
+    TabContainer.Parent = Frame
 
-    local Layout = Instance.new("UIListLayout")
-    Layout.Padding = UDim.new(0, 10)
-    Layout.Parent = Content
+    local TabLayout = Instance.new("UIListLayout")
+    TabLayout.Padding = UDim.new(0, 5)
+    TabLayout.Parent = TabContainer
+
+    local ContentContainer = Instance.new("Frame")
+    ContentContainer.Size = UDim2.new(1, -120, 1, -30)
+    ContentContainer.Position = UDim2.new(0, 120, 0, 30)
+    ContentContainer.BackgroundTransparency = 1
+    ContentContainer.Parent = Frame
+
+    local tabs = {}
+    local currentTab = nil
 
     local function Drag()
         local dragging = false
         local dragInput, dragStart, startPos
 
         TitleBar.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 dragging = true
                 dragStart = input.Position
                 startPos = Frame.Position
@@ -60,7 +71,7 @@ function UILibrary:CreateWindow(title)
         end)
 
         TitleBar.InputChanged:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseMovement then
+            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
                 dragInput = input
             end
         end)
@@ -80,13 +91,68 @@ function UILibrary:CreateWindow(title)
     Drag()
 
     local Window = {}
-    function Window:Button(text, callback)
+    function Window:CreateTab(name)
+        local TabButton = Instance.new("TextButton")
+        TabButton.Size = UDim2.new(1, -10, 0, 40)
+        TabButton.Position = UDim2.new(0, 5, 0, 0)
+        TabButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+        TabButton.BorderSizePixel = 0
+        TabButton.Text = name
+        TabButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+        TabButton.TextSize = 16
+        TabButton.Font = Enum.Font.SourceSans
+        TabButton.Parent = TabContainer
+
+        local TabContent = Instance.new("Frame")
+        TabContent.Size = UDim2.new(1, 0, 1, 0)
+        TabContent.BackgroundTransparency = 1
+        TabContent.Visible = false
+        TabContent.Parent = ContentContainer
+
+        local ContentLayout = Instance.new("UIListLayout")
+        ContentLayout.Padding = UDim.new(0, 10)
+        ContentLayout.Parent = TabContent
+
+        local ContentPadding = Instance.new("UIPadding")
+        ContentPadding.PaddingLeft = UDim.new(0, 10)
+        ContentPadding.PaddingRight = UDim.new(0, 10)
+        ContentPadding.PaddingTop = UDim.new(0, 10)
+        ContentPadding.Parent = TabContent
+
+        local tab = {
+            Button = TabButton,
+            Content = TabContent,
+            Elements = {}
+        }
+
+        TabButton.MouseButton1Click:Connect(function()
+            if currentTab ~= tab then
+                if currentTab then
+                    currentTab.Button.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+                    currentTab.Content.Visible = false
+                end
+                tab.Button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+                tab.Content.Visible = true
+                currentTab = tab
+            end
+        end)
+
+        table.insert(tabs, tab)
+        return tab
+    end
+
+    function Window:SelectTab(index)
+        if tabs[index] then
+            tabs[index].Button:SimulateClick()
+        end
+    end
+
+    function Window:Button(tab, text, callback)
         local ButtonFrame = Instance.new("Frame")
-        ButtonFrame.Size = UDim2.new(1, -20, 0, 40)
-        ButtonFrame.Position = UDim2.new(0, 10, 0, 0)
+        ButtonFrame.Size = UDim2.new(1, 0, 0, 40)
         ButtonFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
         ButtonFrame.BorderSizePixel = 0
-        ButtonFrame.Parent = Content
+        ButtonFrame.Parent = tab.Content
 
         local Button = Instance.new("TextButton")
         Button.Size = UDim2.new(1, 0, 1, 0)
@@ -110,13 +176,12 @@ function UILibrary:CreateWindow(title)
         end)
     end
 
-    function Window:Toggle(text, default, callback)
+    function Window:Toggle(tab, text, default, callback)
         local ToggleFrame = Instance.new("Frame")
-        ToggleFrame.Size = UDim2.new(1, -20, 0, 40)
-        ToggleFrame.Position = UDim2.new(0, 10, 0, 0)
+        ToggleFrame.Size = UDim2.new(1, 0, 0, 40)
         ToggleFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
         ToggleFrame.BorderSizePixel = 0
-        ToggleFrame.Parent = Content
+        ToggleFrame.Parent = tab.Content
 
         local Label = Instance.new("TextLabel")
         Label.Size = UDim2.new(0.8, 0, 1, 0)
@@ -144,7 +209,7 @@ function UILibrary:CreateWindow(title)
 
         local state = default
         ToggleFrame.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 state = not state
                 TweenService:Create(Circle, TweenInfo.new(0.2), {
                     Position = state and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
@@ -157,13 +222,12 @@ function UILibrary:CreateWindow(title)
         end)
     end
 
-    function Window:Slider(text, min, max, default, callback)
+    function Window:Slider(tab, text, min, max, default, callback)
         local SliderFrame = Instance.new("Frame")
-        SliderFrame.Size = UDim2.new(1, -20, 0, 60)
-        SliderFrame.Position = UDim2.new(0, 10, 0, 0)
+        SliderFrame.Size = UDim2.new(1, 0, 0, 60)
         SliderFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
         SliderFrame.BorderSizePixel = 0
-        SliderFrame.Parent = Content
+        SliderFrame.Parent = tab.Content
 
         local Label = Instance.new("TextLabel")
         Label.Size = UDim2.new(1, -60, 0, 20)
@@ -209,19 +273,19 @@ function UILibrary:CreateWindow(title)
 
         local dragging = false
         SliderBar.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 dragging = true
             end
         end)
 
         SliderBar.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 dragging = false
             end
         end)
 
         UserInputService.InputChanged:Connect(function(input)
-            if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
                 local mouseX = input.Position.X
                 local sliderX = SliderBar.AbsolutePosition.X
                 local sliderWidth = SliderBar.AbsoluteSize.X
